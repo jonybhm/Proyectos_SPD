@@ -1,0 +1,152 @@
+// C++ code
+//
+#include<LiquidCrystal.h>
+#define SENSOR_TMP A5
+#define QUEMADO 13
+#define HECHO 12
+#define SINHACER 11
+#define BUZZER 8
+#define PULSADOR_UNO 7
+#define PULSADOR_DOS 6
+#define PULSADOR_TRES 5
+#define PULSADOR_CUATRO 4
+LiquidCrystal pantalla(A0,A1,A2,A3,A4,3);
+  
+
+void setup()
+{
+  pantalla.begin(16,2);
+  pinMode(BUZZER, OUTPUT); // Set buzzer - pin 9 as an output
+  pinMode(QUEMADO, OUTPUT);
+  pinMode(HECHO, OUTPUT);
+  pinMode(SINHACER, OUTPUT);
+  pinMode(PULSADOR_UNO, INPUT_PULLUP);
+  pinMode(PULSADOR_DOS, INPUT_PULLUP);
+  pinMode(PULSADOR_TRES, INPUT_PULLUP);
+  pinMode(PULSADOR_CUATRO, INPUT_PULLUP);
+  
+  
+}
+
+int nivelSinHacer =0; //"SIN HACER";
+int nivelHecho =1; //"HECHO";
+int nivelQuemado =2; //"QUEMADO";
+int estadoActual;
+
+int circuitoEncendido = 0;
+int temperaturaTomada = 0;
+
+void loop()  
+{  
+    temperaturaTomada = analogRead(SENSOR_TMP);
+    temperaturaTomada = map(temperaturaTomada,20,358,-40,125);
+  
+  if(temperaturaTomada > 0 && temperaturaTomada<70)
+  {
+   estadoActual = 0;
+  }else if(temperaturaTomada >= 70 && temperaturaTomada<90)
+  {
+   estadoActual = 1;
+  }else if(temperaturaTomada >= 90 && temperaturaTomada<100)
+  {
+   estadoActual = 2;
+  }
+  	
+  if (digitalRead(PULSADOR_UNO) == 0)
+  {
+    if (circuitoEncendido == 1)
+    {
+      
+      encenderLeds(3);
+           
+    }
+      
+    circuitoEncendido = !circuitoEncendido;
+    
+    
+  }
+ 
+  if (digitalRead(PULSADOR_DOS) == 0 && circuitoEncendido==1 )
+  {
+    leerEstado (estadoActual,2);
+    delay(200);
+  }else if (digitalRead(PULSADOR_TRES) == 0 && circuitoEncendido==1 )
+  {
+    leerEstado (estadoActual,3);
+    delay(200);
+  }else if (digitalRead(PULSADOR_CUATRO) == 0 && circuitoEncendido==1 )
+  {
+    leerEstado (estadoActual,4);
+    delay(200);
+  }
+    
+    
+  	
+  	 
+}
+
+void encenderLeds (int estado)
+{
+  digitalWrite(SINHACER,LOW);
+  digitalWrite(HECHO,LOW);
+  digitalWrite(QUEMADO,LOW);
+  
+  switch(estado)
+  {
+    case 0:
+    digitalWrite(SINHACER,HIGH);
+    delay (500);
+    break;
+    case 1:
+    digitalWrite(HECHO,HIGH);
+    digitalWrite(SINHACER,LOW);
+    delay (500);
+    break;
+    case 2:
+    digitalWrite(QUEMADO,HIGH);
+    digitalWrite(HECHO,LOW);
+    delay (500);
+    break;
+    case 3:
+    digitalWrite(QUEMADO,LOW);
+    digitalWrite(HECHO,LOW);
+    digitalWrite(SINHACER,LOW);
+    delay (500);
+    break;
+  }
+}
+
+void escribirDisplay (int estado, int nivel)
+{       
+  	pantalla.home();
+	pantalla.print(nivel);  	
+  	pantalla.setCursor(0,1);
+  	pantalla.print(estado);
+}
+
+void leerEstado (int estadoActual, int pulsador)
+{
+  switch (estadoActual)
+  {
+    case 0:
+    	escribirDisplay(0,pulsador);
+        encenderLeds(0);
+    	delay (200);
+	break;
+    case 1:
+    	escribirDisplay(1,pulsador);
+        encenderLeds(1);
+    	delay (200);
+	break;
+    case 2:
+    	escribirDisplay(2,pulsador);
+        encenderLeds(2);
+    	delay (200);
+    	for(int i=0; i<3; i++)
+        {
+          tone(BUZZER, 5, 1000); // Send 100 Hz sound signal
+          delay(200);
+        }
+	break;
+  }
+}
